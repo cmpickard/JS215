@@ -42,28 +42,35 @@
 
 // use 3 forEach calls on a cloned copy of the array, mutating the values
 function processBands(bands) {
-  // clone:
-  let fixedBands = [];
-  bands.forEach(band => fixedBands.push(Object.assign({}, band)));
+  let bandMaps = objectArrToMapArr(bands);
+  bandMaps.forEach(fixBand);
+  return mapArrToObjectArr(bandMaps);
+}
 
-  // change to canada
-  fixedBands.forEach(band => {
-    band.country = 'Canada';
+function fixBand(bandMap) {
+  let currName = bandMap.get('name');
+  currName = currName.split(' ').map(word => {
+    word = word.replace(/\./, '');
+    return word[0].toUpperCase() + word.slice(1);
+  }).join(' ');
+
+  bandMap.set('name', currName);
+  bandMap.set('country', 'Canada');
+}
+
+function objectArrToMapArr(objectArr) {
+  let mapArr = [];
+  objectArr.forEach(object => {
+    let map = new Map();
+    Object.entries(object).forEach(([key, val]) => map.set(key, val));
+    mapArr.push(map);
   });
 
-  // capitalize
-  fixedBands.forEach((band) => {
-    band.name = band.name.split(' ').map(word => {
-      return word[0].toUpperCase() + word.slice(1);
-    }).join(' ');
-  });
+  return mapArr;
+}
 
-  // remove periods
-  fixedBands.forEach((band) => {
-    band.name = band.name.replace(/\./g, '');
-  });
-
-  return fixedBands;
+function mapArrToObjectArr(mapArr) {
+  return mapArr.map(map => Object.fromEntries(map.entries()));
 }
 
 let bands = [

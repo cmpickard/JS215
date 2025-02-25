@@ -30,8 +30,8 @@
 // }
 
 function isValidEmail(email) {
-  const VALID_EMAIL_PATTERN = /^[0-9A-Z]+@([A-Z]+\.)+[A-Z]+$/i;
-  return VALID_EMAIL_PATTERN.test(email);
+  const VALID_EMAIL = /^[a-z0-9]+@[a-z]+\.[a-z]+(\.[a-z]+)*$/i;
+  return VALID_EMAIL.test(email);
 }
 
 console.log(isValidEmail('Foo@baz.com.ph'));          // returns true

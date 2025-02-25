@@ -78,8 +78,6 @@
 //   },
 // };
 // The output class record summary should look like this:
-
-// Copy Code
 // {
 //   studentGrades: [ '87 (B)', '73 (D)', '84 (C)', '86 (B)', '56 (F)' ],
 //   exams: [
@@ -135,12 +133,6 @@ let studentScores = {
   },
 };
 
-// function generateClassRecordSummary(scores) {
-//   // ...
-// }
-
-// generateClassRecordSummary(studentScores);
-
 // // returns:
 // {
 //   studentGrades: [ '87 (B)', '73 (D)', '84 (C)', '86 (B)', '56 (F)' ],
@@ -153,88 +145,77 @@ let studentScores = {
 // }
 
 // input: multidimensional object, each property assigned to one student object
-// output: object with two properties: a student grade prop taht is an array of
+// output: object with two properties: a student grade prop that is an array of
 // strings, and an exams property that is an arry of objects that summarize
-// each student's exam performance
+// each exam's score profile
 
-function generateClassRecordSummary(rawClassScores) {
-  let classRecord = {};
-  classRecord.studentGrades = summarizeStudentGrades(rawClassScores);
-  classRecord.exams = summarizeExams(rawClassScores);
+function generateClassRecordSummary(classData) {
+  let scores = Object.values(classData).map(studentObj => studentObj.scores);
+  let studentGrades = scores.map(summarizeStudentScores);
+  let exams = retrieveExamScores(scores);
 
-  return classRecord;
+  return {studentGrades, exams};
 }
 
-function summarizeStudentGrades(rawClassScores) {
-  return Object.values(rawClassScores).reduce((summary, studentRecord) => {
-    let grade = calculateNumericalGrade(studentRecord.scores);
-    let letterGrade = calcLetterGrade(grade);
-    let gradeString = formatGrade(grade, letterGrade);
-    summary.push(gradeString);
-    return summary;
-  }, []);
-}
-
-function calculateNumericalGrade({exams, exercises}) {
+function summarizeStudentScores(studentScores) {
   const EXAM_WEIGHT = .65;
   const EXERCISE_WEIGHT = .35;
-  const EXAM_COUNT = 4;
-  let exerciseScore = exercises.reduce((sum, score) => sum + score);
-  let examAverage = exams.reduce((sum, score) => sum + score) / EXAM_COUNT;
-  let grade = (examAverage * EXAM_WEIGHT) + (exerciseScore * EXERCISE_WEIGHT);
-  return Math.round(grade);
+
+  let examAvg = average(studentScores.exams);
+  let exerciseSum = studentScores.exercises.reduce((acc, num) => acc + num);
+  let grade = Math.round((EXAM_WEIGHT * examAvg) +
+  (EXERCISE_WEIGHT * exerciseSum));
+
+  return grade + ' ' + letterGrade(grade);
 }
 
-function calcLetterGrade(grade) {
-  if (grade > 92.9) {
-    return 'A';
-  } else if (grade > 84.9) {
-    return 'B';
-  } else if (grade > 76.9) {
-    return 'C';
-  } else if (grade > 68.9) {
-    return 'D';
-  } else if (grade > 59.9) {
-    return 'E';
+function retrieveExamScores(rawScores) {
+  let studentExamScores = rawScores.map(student => student.exams);
+  let examScores = convertStudentScoresToExamScores(studentExamScores);
+
+  return examScores.reduce(summarizeExams, []);
+}
+
+function convertStudentScoresToExamScores(studentExamScores) {
+  let exams = new Array(studentExamScores[0].length).fill(null).map(_ => []);
+
+  studentExamScores.forEach(scores => {
+    scores.forEach((score, idx) => {
+      exams[idx].push(score);
+    });
+  });
+
+  return exams;
+}
+
+function summarizeExams(summaryArr, examScores) {
+  let summary = {};
+  summary.average = average(examScores);
+  summary.minumum = Math.min(...examScores);
+  summary.maximum = Math.max(...examScores);
+  summaryArr.push(summary);
+  return summaryArr;
+}
+
+function letterGrade(grade) {
+  if (grade > 92) {
+    return '(A)';
+  } else if (grade > 84) {
+    return '(B)';
+  } else if (grade > 76) {
+    return '(C)';
+  } else if (grade > 68) {
+    return '(D)';
+  } else if (grade > 59) {
+    return '(E)';
   } else {
-    return 'F';
+    return '(F)';
   }
 }
 
-function formatGrade(grade, letterGrade) {
-  return `${grade} (${letterGrade})`;
+function average(scores) {
+  return (scores.reduce((sum, num) => sum + num) / scores.length);
 }
-
-
-function summarizeExams(rawClassScores) {
-  const STUDENT_COUNT = Object.keys(rawClassScores).length;
-
-  let examScoresByStudent = extractStudentExamScores(rawClassScores);
-  let examScores = organizeScoresByExam(examScoresByStudent);
-
-  let examSummary = examScores.map((scores) => {
-    let min = Math.min(...scores);
-    let max = Math.max(...scores);
-    let avg = scores.reduce((sum, score) => sum + score) / STUDENT_COUNT;
-    return {average: avg, minimum: min, maximum: max};
-  });
-
-  return examSummary;
-}
-
-function extractStudentExamScores(rawClassScores) {
-  return Object.values(rawClassScores).map((studentRecord) => {
-    return studentRecord.scores.exams;
-  });
-}
-
-function organizeScoresByExam(studentScores) {
-  return studentScores.reduce((exams, studentScores) => {
-    studentScores.forEach((score, idx) => exams[idx].push((score)));
-    return exams;
-  }, [[], [], [], []]);
-}
-
 
 console.log(generateClassRecordSummary(studentScores));
 // {
